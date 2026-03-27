@@ -59,9 +59,10 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    frame_id = LaunchConfiguration('frame_id')
-    output_topic0 = LaunchConfiguration('output_topic0')
-    output_topic1 = LaunchConfiguration('output_topic1')
+    frame_id_front = LaunchConfiguration('frame_id_front')
+    frame_id_rear = LaunchConfiguration('frame_id_rear')
+    output_topic_front = LaunchConfiguration('output_topic_FRONT')
+    output_topic_rear = LaunchConfiguration('output_topic_REAR')
     inverted = LaunchConfiguration('inverted')
     hostip = LaunchConfiguration('hostip')
     port0 = LaunchConfiguration('port0')
@@ -72,7 +73,8 @@ def generate_launch_description():
     laser_enable = LaunchConfiguration('laser_enable')
     scan_range_start = LaunchConfiguration('scan_range_start')
     scan_range_stop = LaunchConfiguration('scan_range_stop')
-    sensorip = LaunchConfiguration('sensorip')
+    sensorip_front = LaunchConfiguration('sensorip_front')
+    sensorip_rear = LaunchConfiguration('sensorip_rear')
 
 
     # frame_id = LaunchConfiguration('frame_id', default='laser')
@@ -85,33 +87,41 @@ def generate_launch_description():
     # angle_offset = LaunchConfiguration('angle_offset',default='0')
     
 
-    declare_frame_id_cmd = DeclareLaunchArgument(
-    'frame_id',
-    default_value='laser',
+    declare_frame_id_fr_cmd = DeclareLaunchArgument(
+    'frame_id_front',
+    default_value='laser_scan_front',
     )
+
+    declare_frame_id_rr_cmd = DeclareLaunchArgument(
+    'frame_id_rear',
+    default_value='laser_scan_rear',
+    )
+
     declare_output_topic0_cmd = DeclareLaunchArgument(
-    'output_topic0',
-    default_value='scan0',
+    'output_topic_FRONT',
+    default_value='laser_scan_front',
     )
     declare_output_topic1_cmd = DeclareLaunchArgument(
-    'output_topic1',
-    default_value='scan1',
+    'output_topic_REAR',
+    default_value='laser_scan_rear',
     )
     declare_inverted_cmd = DeclareLaunchArgument(
     'inverted',
-    default_value='false',
+    default_value='true',
     )
     declare_hostip_cmd = DeclareLaunchArgument(
     'hostip',
-    default_value='0.0.0.0',
+    default_value='192.168.2.2',
     )
+    #2368
     declare_port0_cmd = DeclareLaunchArgument(
     'port0',
-    default_value='"2368"',
+    default_value='"2367"',
     )
+    #2369
     declare_port1_cmd = DeclareLaunchArgument(
     'port1',
-    default_value='"2369"',
+    default_value='"2368"',
     )
     declare_angle_offset_cmd = DeclareLaunchArgument(
     'angle_offset',
@@ -133,13 +143,20 @@ def generate_launch_description():
     'scan_range_start',
     default_value='"45"',
     )
+    #45
     declare_scan_range_stop_cmd = DeclareLaunchArgument(
     'scan_range_stop',
     default_value='"315"',
     )
-    declare_sensorip_cmd = DeclareLaunchArgument(
-    'sensorip',
-    default_value='192.168.198.2',
+    #315
+    declare_sensorip_fr_cmd = DeclareLaunchArgument(
+    'sensorip_front',
+    default_value='192.168.2.10',
+    )
+
+    declare_sensorip_rr_cmd = DeclareLaunchArgument(
+    'sensorip_rear',
+    default_value='192.168.2.11',
     )
 
     richbeam_lidar_node0 = Node(
@@ -147,12 +164,18 @@ def generate_launch_description():
         name='richbeam_lidar_node0',
         executable='lakibeam1_scan_node',
         parameters=[{
-            'frame_id':frame_id,
-            'output_topic':output_topic0,
+            'frame_id':frame_id_front,
+            'output_topic':output_topic_front,
             'inverted':inverted,
             'hostip':hostip,
             'port':port0,
-            'angle_offset':angle_offset
+            'angle_offset':angle_offset,
+            'sensorip':sensorip_front,
+            'scanfreq':scanfreq,
+            'filter':filter,
+            'laser_enable':laser_enable,
+            'laser_enable':laser_enable,
+            'scan_range_stop':scan_range_stop
         }],
         output='screen'
     )
@@ -161,18 +184,23 @@ def generate_launch_description():
         name='richbeam_lidar_node1',
         executable='lakibeam1_scan_node',
         parameters=[{
-            'frame_id':frame_id,
-            'output_topic':output_topic1,
+            'frame_id':frame_id_rear,
+            'output_topic':output_topic_rear,
             'inverted':inverted,
             'hostip':hostip,
             'port':port1,
-            'angle_offset':angle_offset
+            'angle_offset':angle_offset,
+            'sensorip':sensorip_rear,
+            'filter':filter,
+            'laser_enable':laser_enable,
+            'laser_enable':laser_enable,
+            'scan_range_stop':scan_range_stop
         }],
         output='screen'
     )
     lakibeam1_pcd_dir = get_package_share_directory('lakibeam1')
-    rviz_config_dir = os.path.join(lakibeam1_pcd_dir,'rviz','lakibeam1_scan_dual.rviz')
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    # rviz_config_dir = os.path.join(lakibeam1_pcd_dir,'rviz','lakibeam1_scan_dual.rviz')
+    # use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     # rviz_node = Node(
     #         package='rviz2',
     #         executable='rviz2',
@@ -182,7 +210,8 @@ def generate_launch_description():
     #         output='screen')
     ld = LaunchDescription()
 
-    ld.add_action(declare_frame_id_cmd)
+    ld.add_action(declare_frame_id_fr_cmd)
+    ld.add_action(declare_frame_id_rr_cmd)
     ld.add_action(declare_output_topic0_cmd)
     ld.add_action(declare_output_topic1_cmd)
     ld.add_action(declare_inverted_cmd)
@@ -195,7 +224,8 @@ def generate_launch_description():
     ld.add_action(declare_laser_enable_cmd)
     ld.add_action(declare_scan_range_start_cmd)
     ld.add_action(declare_scan_range_stop_cmd)
-    ld.add_action(declare_sensorip_cmd)
+    ld.add_action(declare_sensorip_fr_cmd)
+    ld.add_action(declare_sensorip_rr_cmd)
     ld.add_action(richbeam_lidar_node0)
     ld.add_action(richbeam_lidar_node1)
     # ld.add_action(rviz_node)
